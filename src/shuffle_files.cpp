@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (std::error_code ec; !fs::exists(output_dir) && !fs::create_directory(output_dir, ec) && ec) {
-        std::cerr << "Error with creating directory [" << output_dir << "] : " << ec.message() << std::endl;
+        std::cerr << "Error creating directory [" << output_dir << "] : " << ec.message() << std::endl;
         return 4;
     }
 
