@@ -9,6 +9,12 @@
 
 namespace fs = std::filesystem;
 
+void cpormv_show(const fs::path& from, const fs::path& to) noexcept
+{
+    std::cout << '[' << to << "] <- [" << from << ']' << std::endl;
+}
+void do_nothing(const fs::path&, const fs::path&) noexcept {}
+
 void print_help(const char* prog_name, const argagg::parser& argparser) {
     std::cerr << "Usage:\n" << prog_name << " [options]\n";
     std::cerr << argparser;
@@ -42,7 +48,7 @@ int main(int argc, char* argv[]) {
     if (!args["in"]) {
         std::cerr << "Error: Input directory is required.\n";
         print_help(argv[0], argparser);
-        return 1;
+        return 2;
     }
 
     fs::path input_dir     = args["in"].as<std::string>();
@@ -50,7 +56,7 @@ int main(int argc, char* argv[]) {
     bool move_files        = args["mv"];
     bool verbose_mode      = args["verb"];
     std::string ext_filter = args["ext"] ? args["ext"].as<std::string>() : "";
-
+    
     std::vector<fs::path> files;
 
     // Read files from input directory
@@ -71,24 +77,21 @@ int main(int argc, char* argv[]) {
     size_t num_files = files.size();
     int num_digits = std::to_string(num_files).length();
 
+    using fpp_t = void (*)(const fs::path&, const fs::path&);
+    fpp_t mvorcp = move_files ? static_cast<fpp_t>(fs::rename) : static_cast<fpp_t>(fs::copy);
+    fpp_t verbose_show = verbose_mode ? static_cast<fpp_t>(cpormv_show) : static_cast<fpp_t>(do_nothing);
 
     // Copy or move files to output directory with new names
     for (size_t i = 0; i < num_files; ++i) {
         fs::path new_filename = output_dir / (std::to_string(i + 1).insert(0, num_digits - std::to_string(i + 1).length(), '0') + files[i].extension().string());
+        
+        verbose_show(files[i], new_filename);
 
-        if(verbose_mode) {
-            std::cout << '[' << new_filename << "] <- [" << files[i] << ']' << std::endl;
-        }
-
-        std::error_code err;
-        if (move_files) {
-            fs::rename(files[i], new_filename, err);
-        } else {
-            fs::copy(files[i], new_filename, err);
-        }
-        if(err) {
-            std::cerr << "Error with [" << files[i] << "] -> [" << new_filename << "]:\n" << err.message() << std::endl;
-            return 1;
+        try {
+            mvorcp(files[i], new_filename);
+        } catch (const fs::filesystem_error& e) {
+            std::cerr << "Error:\n" << e.what() << std::endl;
+            return 3;
         }        
     }
 
