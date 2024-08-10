@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <random>
 #include <iomanip>
+#include <sstream>
 #include <argagg/argagg.hpp>
 
 namespace fs = std::filesystem;
@@ -21,11 +22,29 @@ void print_help(const char* prog_name, const argagg::parser& argparser)
     std::cerr << argparser;
 }
 
-std::string generate_new_filename(size_t index, int num_digits, const std::string& extension)
+std::string generate_new_filename(size_t index, int num_digits, const std::string& extension, const std::string& postfix = "")
 {
     std::ostringstream oss;
-    oss << std::setw(num_digits) << std::setfill('0') << (index + 1) << extension;
+    oss << std::setw(num_digits) << std::setfill('0') << (index + 1) << extension << postfix;
     return oss.str();
+}
+
+std::string generate_postfix() noexcept
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dis(0, 35);
+    std::string hash;
+    hash.reserve(10);
+    hash = ".";
+    for (int i = 0; i < 5; ++i) {
+        hash += "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[dis(gen)];
+    }
+    return hash + ".tmp";
+}
+std::string remove_postfix(const std::string& file) noexcept
+{
+    return file.substr(0, file.length() - 10);
 }
 
 int main(int argc, char* argv[]) {
@@ -99,18 +118,39 @@ int main(int argc, char* argv[]) {
     fpp_t mvorcp = move_files ? static_cast<fpp_t>(fs::rename) : static_cast<fpp_t>(fs::copy);
     fpp_t verbose_show = verbose_mode ? static_cast<fpp_t>(cpormv_show) : static_cast<fpp_t>(do_nothing);
 
-    // Copy or move files to output directory with new names
+    bool needs_temp_rename = (input_dir == output_dir) && move_files;
+    std::string hash_postfix = needs_temp_rename ? generate_postfix() : "";
+
+    // First pass: rename files with temporary postfix
     for (size_t i = 0; i < num_files; ++i) {
-        fs::path new_filename = output_dir / generate_new_filename(i, num_digits, files[i].extension().string());
+        fs::path new_filename = output_dir / generate_new_filename(i, num_digits, files[i].extension().string(), hash_postfix);
         
         verbose_show(files[i], new_filename);
 
+
         try {
             mvorcp(files[i], new_filename);
+            files[i] = std::move(new_filename);
         } catch (const fs::filesystem_error& e) {
             std::cerr << "Error:\n" << e.what() << std::endl;
             return 5;
-        }        
+        }
+    }
+
+    // Second pass: rename files to final names if nessesary
+    if(needs_temp_rename) {
+        for (size_t i = 0; i < num_files; ++i) {
+            fs::path final_filename = remove_postfix(files[i]);
+            
+            verbose_show(files[i], final_filename);
+
+            try {
+                fs::rename(files[i], final_filename);
+            } catch (const fs::filesystem_error& e) {
+                std::cerr << "Error:\n" << e.what() << std::endl;
+                return 6;
+            }
+        }
     }
 
     return 0;
