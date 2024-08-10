@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <random>
 #include <iomanip>
-#include <fstream>
 #include <argagg/argagg.hpp>
 
 namespace fs = std::filesystem;
@@ -13,11 +12,20 @@ void cpormv_show(const fs::path& from, const fs::path& to) noexcept
 {
     std::cout << '[' << to << "] <- [" << from << ']' << std::endl;
 }
+
 void do_nothing(const fs::path&, const fs::path&) noexcept {}
 
-void print_help(const char* prog_name, const argagg::parser& argparser) {
+void print_help(const char* prog_name, const argagg::parser& argparser)
+{
     std::cerr << "Usage:\n" << prog_name << " [options]\n";
     std::cerr << argparser;
+}
+
+std::string generate_new_filename(size_t index, int num_digits, const std::string& extension)
+{
+    std::ostringstream oss;
+    oss << std::setw(num_digits) << std::setfill('0') << (index + 1) << extension;
+    return oss.str();
 }
 
 int main(int argc, char* argv[]) {
@@ -56,7 +64,17 @@ int main(int argc, char* argv[]) {
     bool move_files        = args["mv"];
     bool verbose_mode      = args["verb"];
     std::string ext_filter = args["ext"] ? args["ext"].as<std::string>() : "";
-    
+
+    if (!fs::exists(input_dir)) {
+        std::cerr << "Error: Input directory does not exist.\n";
+        return 3;
+    }
+
+    if (std::error_code ec; !fs::exists(output_dir) && !fs::create_directory(output_dir, ec) && ec) {
+        std::cerr << "Error with creating directory [" << output_dir << "] : " << ec.message() << std::endl;
+        return 4;
+    }
+
     std::vector<fs::path> files;
 
     // Read files from input directory
@@ -83,7 +101,7 @@ int main(int argc, char* argv[]) {
 
     // Copy or move files to output directory with new names
     for (size_t i = 0; i < num_files; ++i) {
-        fs::path new_filename = output_dir / (std::to_string(i + 1).insert(0, num_digits - std::to_string(i + 1).length(), '0') + files[i].extension().string());
+        fs::path new_filename = output_dir / generate_new_filename(i, num_digits, files[i].extension().string());
         
         verbose_show(files[i], new_filename);
 
@@ -91,7 +109,7 @@ int main(int argc, char* argv[]) {
             mvorcp(files[i], new_filename);
         } catch (const fs::filesystem_error& e) {
             std::cerr << "Error:\n" << e.what() << std::endl;
-            return 3;
+            return 5;
         }        
     }
 
