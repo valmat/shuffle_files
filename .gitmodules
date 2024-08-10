@@ -1,0 +1,3 @@
+[submodule "deps/argagg"]
+	path = deps/argagg
+	url = git@github.com:vietjtnguyen/argagg.git
