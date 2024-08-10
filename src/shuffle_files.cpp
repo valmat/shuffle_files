@@ -80,11 +80,16 @@ int main(int argc, char* argv[]) {
             std::cout << '[' << new_filename << "] <- [" << files[i] << ']' << std::endl;
         }
 
+        std::error_code err;
         if (move_files) {
-            fs::rename(files[i], new_filename);
+            fs::rename(files[i], new_filename, err);
         } else {
-            fs::copy(files[i], new_filename);
+            fs::copy(files[i], new_filename, err);
         }
+        if(err) {
+            std::cerr << "Error with [" << files[i] << "] -> [" << new_filename << "]:\n" << err.message() << std::endl;
+            return 1;
+        }        
     }
 
     return 0;
