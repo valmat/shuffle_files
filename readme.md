@@ -1,4 +1,4 @@
-# Shuffle files
+# Shuffle Files
 
 The `shuffle_files` project is a command-line tool designed to shuffle, copy, or move files from one directory to another. This tool reads all files from a given input directory (including subdirectories), optionally filters them by a specified file extension, randomly shuffles them, and then copies or moves them to an output directory. The files are renamed in a sequential order with leading zeros to maintain a natural lexicographical order.
 
@@ -15,17 +15,19 @@ cd shuffle_files
 git submodule update --init --recursive
 ```
 
-Next, go to the src directory and compile the project:
+Next, go to the `src` directory and compile the project:
 
 ```bash
 cd src
 make release
 ```
+
 If you need a debug build, use the following command:
 ```bash
 cd src
 make -j
 ```
+
 ## Main Features
 - **Input and Output Directories**: Specify the input directory and optionally the output directory.
 - **File Extension Filtering**: Filter files by a specified extension (e.g., `.mp3`).
@@ -39,7 +41,7 @@ make -j
 Here's how to use this utility:
 
 ```bash
-$bin/shuffle_files.bin -h
+$ bin/shuffle_files.bin -h
 
 bin/shuffle_files.bin [options]
     -h, --help
@@ -56,10 +58,9 @@ bin/shuffle_files.bin [options]
         Verbose mode
     -e, --ext
         File extension to filter (e.g. --ext ".mp3")
-
 ```
 
-E.g.
+For example:
 
 ```sh
 shuffle_files -i /path/to/input/dir -o /path/to/output/dir --ext ".mp3" --mv -v
@@ -81,7 +82,7 @@ shuffle_files -i /path/to/input/dir -o /path/to/output/dir --ext ".mp3" --mv -v
    shuffle_files -i /path/to/input/dir -v
    ```
 
-## Source code
+## Source Code
 [https://github.com/valmat/shuffle_files](https://github.com/valmat/shuffle_files)
 
 ## License
