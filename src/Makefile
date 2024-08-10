@@ -18,8 +18,8 @@ INCLUDES   = -I.                            \
 # -fsanitize=thread` (ThreadSanitizer для обнаружения гонок данных) не может быть использован одновременно
 # 	с `-fsanitize=address` из-за конфликта в реализации.
 
-# SAN_CPP_FLAGS  = -fsanitize=address,undefined,leak
-SAN_CPP_FLAGS  = -fsanitize=thread
+SAN_CPP_FLAGS  = -fsanitize=address,undefined,leak
+# SAN_CPP_FLAGS  = -fsanitize=thread
 SAN_LD_FLAGS  = ${SAN_CPP_FLAGS}
 
 CPP_FLAGS  = ${CPP_STD} -O0 -g  ${OPT_FLAG} ${SAN_CPP_FLAGS} ${INCLUDES} -DDEBUG_BUILD -c
