@@ -42,8 +42,10 @@ std::string generate_postfix() noexcept
     }
     return hash + ".tmp";
 }
+
 std::string remove_postfix(const std::string& file) noexcept
 {
+    // remove 10 characters: ".XXXXX.tmp"
     return file.substr(0, file.length() - 10);
 }
 
@@ -127,9 +129,9 @@ int main(int argc, char* argv[]) {
         
         verbose_show(files[i], new_filename);
 
-
         try {
             mvorcp(files[i], new_filename);
+            // Update the file path in the vector to the new filename
             files[i] = std::move(new_filename);
         } catch (const fs::filesystem_error& e) {
             std::cerr << "Error:\n" << e.what() << std::endl;
@@ -137,10 +139,10 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Second pass: rename files to final names if nessesary
+    // Second pass: rename files to final names if necessary
     if(needs_temp_rename) {
         for (size_t i = 0; i < num_files; ++i) {
-            fs::path final_filename = remove_postfix(files[i]);
+            fs::path final_filename = remove_postfix(files[i].string());
             
             verbose_show(files[i], final_filename);
 
