@@ -9,9 +9,9 @@
 
 namespace fs = std::filesystem;
 
-void print_help(const argagg::parser_results& args, const argagg::parser& parser) {
-    std::cerr << "Usage: " << args[0] << " [options]\n";
-    std::cerr << parser;
+void print_help(const char* prog_name, const argagg::parser& argparser) {
+    std::cerr << "Usage:\n" << prog_name << " [options]\n";
+    std::cerr << argparser;
 }
 
 int main(int argc, char* argv[]) {
@@ -29,21 +29,20 @@ int main(int argc, char* argv[]) {
         args = argparser.parse(argc, argv);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
-        print_help(args, argparser);
+        print_help(argv[0], argparser);
         return 1;
     }
 
     if (args["help"]) {
-        print_help(args, argparser);
+        print_help(argv[0], argparser);
         return 0;
     }
 
     if (!args["in"]) {
         std::cerr << "Error: Input directory is required.\n";
-        print_help(args, argparser);
+        print_help(argv[0], argparser);
         return 1;
     }
-
 
     return 0;
 }
